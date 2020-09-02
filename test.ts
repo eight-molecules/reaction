@@ -4,7 +4,7 @@ import { interval } from './src/interval';
 import { pipe } from './src/pipe';
 import { map } from './src/operators/map';
 
-const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
+export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
     await should();
     console.log(`✅ ${msg}`);
@@ -22,6 +22,20 @@ test('The Observable class should create an observable that immediately complete
       error: (err: Error) => reject(err),
       complete: () => resolve()
     })
+  });
+});
+
+test('The Observable\'s toPromise method should return a promise that resolves the next emission from the source observable.', async () => {
+  return new Promise((resolve, reject) => {
+    const source = new Observable(({ next }) => next());
+    source.toPromise().then(() => resolve()).catch((err: Error) => reject(err));
+  });
+});
+
+test('The Observable\'s toPromise method should return a promise that rejects when an error occurs.', async () => {
+  return new Promise((resolve, reject) => {
+    const source = new Observable(({ error = () => { } }) => error());
+    source.toPromise().then((value: any) => reject(`The promise resolved when it should have rejected! (value: ${value})`)).catch((err: Error) => resolve());
   });
 });
 
