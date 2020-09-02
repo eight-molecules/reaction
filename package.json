@@ -1,0 +1,18 @@
+{
+  "name": "reaction",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "ts-node-dev --respawn -- test.ts",
+    "start": "ts-node-dev --respawn -- index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^14.6.2",
+    "ts-node-dev": "^1.0.0-pre.61",
+    "typescript": "^4.0.2"
+  },
+  "dependencies": {}
+}
