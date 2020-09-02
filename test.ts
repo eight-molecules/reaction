@@ -2,6 +2,7 @@ import { Observable } from './src/Observable';
 import { fromPromise } from './src/fromPromise';
 import { interval } from './src/interval';
 import { pipe } from './src/pipe';
+import { map } from './src/operators/map';
 
 const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
@@ -70,9 +71,27 @@ test('Pipe should apply operators to a source', async () => {
           reject(`Incorrect value mapped! (value: ${value})`);
         }
 
-        console.log(value);
         resolve();
       }
     });
-  })
+  });
+});
+
+test('Map should apply a change to the source', async () => {
+  return new Promise((resolve, reject) => {
+    const source = new Observable(({ next }) => next());
+    pipe(source, 
+      map(() => 1),
+      map((x) => x * 2),
+      map((result) => result.toString())
+    ).subscribe({
+      next: (value: any) => {
+        if (value !== '2') {
+          reject(`Incorrect value mapped! (value: ${value})`);
+        }
+
+        resolve();
+      }
+    });
+  });
 })
