@@ -3,6 +3,8 @@ import { fromPromise } from './src/fromPromise';
 import { interval } from './src/interval';
 import { pipe } from './src/pipe';
 import { map } from './src/operators/map';
+import { resolve } from 'path';
+import { tap } from './src/operators/tap';
 
 export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
@@ -108,4 +110,31 @@ test('Map should apply a change to the source', async () => {
       }
     });
   });
-})
+});
+
+test('Tap should run a function and return the same value.', async () => {
+  return new Promise((resolve, reject) => {
+    const source = new Observable(({ next, complete = () => { } }) => { 
+      for(let i = 0; i < 3; i++) { 
+        next() ;
+      }
+
+      complete();
+    });
+
+    let sideEffectResult = 0;
+    pipe(source,
+      tap(() => sideEffectResult += 1)
+    ).subscribe({
+      next: (value: any) => value && reject(),
+      error: (err: Error) => reject(err),
+      complete: () => {
+        if (sideEffectResult !== 3) {
+          reject(`Incorrect number of calls to tapFn. (sideEffectResult: ${sideEffectResult}`);
+        }
+
+        resolve();
+      }
+    });
+  });
+});
