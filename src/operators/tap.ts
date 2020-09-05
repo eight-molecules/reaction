@@ -1,6 +1,6 @@
 import { Observable } from "../Observable";
 import { Observer } from "../Observer";
-import { Operator, OperatorFactory } from "../types/Operator";
+import { Operator, OperatorFactory } from "./Operator";
 
 export const tap: OperatorFactory = <T>(tapFn: Function): Operator => (observable: Observable<T>) => new Observable<T>((observer: Observer<T>) => {
   let { unsubscribe } = observable.subscribe({
