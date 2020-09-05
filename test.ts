@@ -6,6 +6,7 @@ import { map } from './src/operators/map';
 import { resolve } from 'path';
 import { tap } from './src/operators/tap';
 import { startWith } from './src/operators/startWith';
+import { Operator } from './src/types/Operator';
 
 export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
@@ -30,21 +31,21 @@ test('The Observable class should create an observable that immediately complete
 
 test('Observable.toPromise should return a promise that resolves the next emission from the source observable.', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable(({ next }) => next());
+    const source = new Observable<void>(({ next }) => next());
     source.toPromise().then(() => resolve()).catch((err: Error) => reject(err));
   });
 });
 
 test('Observable.toPromise() should return a promise that rejects when an error occurs.', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable(({ error = () => { } }) => error());
+    const source = new Observable<void>(({ error }) => error?.(new Error('Purposeful failure.')));
     source.toPromise().then((value: any) => reject(`The promise resolved when it should have rejected! (value: ${value})`)).catch((err: Error) => resolve());
   });
 });
 
 test('fromPromise() should return an observable that emits the resolved value then completes.', async () => {
   return new Promise<void>((resolve, reject) => {
-    const promise = new Promise(resolve => resolve());
+    const promise = new Promise<void>(resolve => resolve());
 
     fromPromise(promise).subscribe({
       next: () => resolve(),
@@ -73,17 +74,17 @@ test('interval() should return an observable that emits multiple values over a s
 
 test('pipe() should apply operators to a source', async () => {
   return new Promise((resolve, reject) => {
-    const toOne = (observable: Observable<void>) => new Observable<number>((observer) => {
+    const toOne: Operator = (observable: Observable<void>) => new Observable<number>((observer) => {
       observable.subscribe({
         next: () => observer.next(1)
       });
     });
   
-    const source = new Observable(({ next }) => next());
+    const source = new Observable<void>(({ next }) => next());
     pipe(source, 
       toOne
     ).subscribe({
-      next: (value: any) => {
+      next: (value: number) => {
         if (value !== 1) {
           reject(`Incorrect value mapped! (value: ${value})`);
         }
@@ -96,11 +97,11 @@ test('pipe() should apply operators to a source', async () => {
 
 test('map() should apply a change to the source', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable(({ next }) => next());
+    const source = new Observable<void>(({ next }) => next());
     pipe(source, 
       map(() => 1),
-      map((x) => x * 2),
-      map((result) => result.toString())
+      map((x: number) => x * 2),
+      map((result: number) => result.toString())
     ).subscribe({
       next: (value: any) => {
         if (value !== '2') {
@@ -115,12 +116,12 @@ test('map() should apply a change to the source', async () => {
 
 test('tap() should run a function and return the same value.', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable(({ next, complete = () => { } }) => { 
+    const source = new Observable<void>(({ next, complete }) => { 
       for(let i = 0; i < 3; i++) { 
         next() ;
       }
 
-      complete();
+      complete?.();
     });
 
     let sideEffectResult = 0;
