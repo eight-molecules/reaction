@@ -1,12 +1,12 @@
-import { Observable } from './src/Observable';
-import { fromPromise } from './src/fromPromise';
-import { interval } from './src/interval';
-import { pipe } from './src/pipe';
-import { map } from './src/operators/map';
+import { Observable } from '../src/Observable';
+import { fromPromise } from '../src/fromPromise';
+import { interval } from '../src/interval';
+import { pipe } from '../src/pipe';
+import { map } from '../src/operators/map';
 import { resolve } from 'path';
-import { tap } from './src/operators/tap';
-import { startWith } from './src/operators/startWith';
-import { Operator } from './src/types/Operator';
+import { tap } from '../src/operators/tap';
+import { startWith } from '../src/operators/startWith';
+import { Operator } from '../src/types/Operator';
 
 export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {

@@ -2,11 +2,20 @@
   "compilerOptions": {
     "target": "ES2015",
     "module": "commonjs",
+    "lib": ["es2017", "es7", "es6", "dom"],
+    "declaration": true,
+    "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Recommended"
+  "display": "Recommended",
+  "types": "dist/index.d.ts",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ]
 }
