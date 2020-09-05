@@ -1,14 +1,15 @@
 import { Observable } from "../Observable";
 import { Observer } from "../Observer";
+import { Operator, OperatorFactory } from "../types/Operator";
 
-export const tap = (tapFn: Function) => (observable: Observable<any>) => new Observable<any>(({ next, error = () => {}, complete = () => {}}: Observer<any>) => {
+export const tap: OperatorFactory = <T>(tapFn: Function): Operator => (observable: Observable<T>) => new Observable<T>((observer: Observer<T>) => {
   let { unsubscribe } = observable.subscribe({
-    next: (value: any) => {
+    next: (value: T) => {
       tapFn(value);
-      next(value);
+      observer.next(value);
     },
-    error: (err: Error) => error(err),
-    complete: () => complete()
+    error: (err: Error) => observer.error?.(err),
+    complete: () => observer.complete?.()
   });
 
   return { unsubscribe };

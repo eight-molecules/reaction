@@ -1,5 +1,5 @@
 export interface Observer<T> {
-  next: (value?: T) => void;
-  error?: (err?: any) => void;
-  complete?: () => void;
+  next(value: T): void;
+  error?(err: Error): void;
+  complete?(): void;
 }
