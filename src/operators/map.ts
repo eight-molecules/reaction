@@ -1,4 +1,4 @@
-import { Operator, OperatorFactory } from "../types/Operator";
+import { Operator, OperatorFactory } from "./Operator";
 import { Observable } from "../Observable";
 import { Observer } from "../Observer";
 
