@@ -5,7 +5,11 @@ import { pipe } from '../src/pipe';
 import { map } from '../src/operators/map';
 import { tap } from '../src/operators/tap';
 import { startWith } from '../src/operators/startWith';
+import { swap } from '../src/operators/swap';
+
+import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
+
 
 export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
@@ -163,4 +167,14 @@ test('startWith() should subscribe to an observable that immediately emits the s
       complete: () => emissions === 4 ? resolve() : reject(`Wrong number of emissions on completion. (emissions: ${emissions}`)
     })
   });
+});
+
+test('swap() should replace the sources with the new observable', async () => {
+  return new Promise((resolve, reject) => {
+    pipe(of(1), 
+      swap((v: number) => of( ['a', 'b', 'c'][v] )),
+    ).subscribe({
+      next: (v: string) => v === 'b' && resolve()
+    });
+  })
 });
