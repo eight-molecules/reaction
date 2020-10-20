@@ -14,6 +14,8 @@
     "ts-node-dev": "^1.0.0-pre.61",
     "typescript": "^4.0.2"
   },
-  "dependencies": {},
+  "files": [
+    "dist/"
+  ],
   "types": "dist/index.d.ts"
 }
