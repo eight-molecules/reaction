@@ -1,8 +1,12 @@
-export { Observable } from './Observable';
-export { Observer } from './Observer';
-export { Subscription } from './Subscription';
+export * from './Observable';
+export * from './Observer';
+export * from './Subscription';
 
 // Pre-built Observable sources
-export { fromPromise } from './fromPromise';
-export { interval } from './interval';
-export { pipe } from './pipe';
+export * from './fromPromise';
+export * from './interval';
+export * from './of';
+
+export * from './pipe';
+
+export * from './operators/index';

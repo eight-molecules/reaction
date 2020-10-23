@@ -1,6 +1,7 @@
-export { Operator, OperatorFactory } from './Operator';
+export * from './Operator';
 
 // Pre-built operators
-export { map } from './map';
-export { tap } from './tap';
-export { startWith } from './startWith';
+export * from './map';
+export * from './tap';
+export * from './startWith';
+export * from './swap';
