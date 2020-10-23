@@ -10,7 +10,6 @@ import { swap } from '../src/operators/swap';
 import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
 
-
 export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
     await should();
