@@ -2,7 +2,7 @@
   "name": "reactionjs",
   "version": "1.0.0",
   "description": "",
-  "module": "dist/src/index.js",
+  "module": "dist/reaction.js",
   "scripts": {
     "test": "ts-node-dev --respawn -- test/test.ts",
     "build": "npm run clean && tsc && npx webpack",
