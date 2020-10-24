@@ -19,5 +19,7 @@ module.exports = {
   output: {
     filename: 'reaction.js',
     path: path.resolve(__dirname, 'dist'),
+    library: 'reaction',
+    libraryTarget: 'umd'
   },
 };
