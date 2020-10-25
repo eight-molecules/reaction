@@ -57,6 +57,15 @@ test('fromPromise() should return an observable that emits the resolved value th
   });
 });
 
+test('fromPromise() should call the error method of the observer when the promise rejects.', async () => {
+  return new Promise((resolve, reject) => {
+    fromPromise((async () => { throw new Error('Intended failure.') })()).subscribe({
+      next: reject,
+      error: () => resolve()
+    });
+  })
+})
+
 test('fromEvent() should return an observable that emits events from the given source.', async () => {
   return new Promise((resolve, reject) => {
     const target: EventTarget = new class implements EventTarget {
