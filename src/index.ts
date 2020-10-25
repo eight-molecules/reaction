@@ -4,6 +4,7 @@ export * from './Subscription';
 
 // Pre-built Observable sources
 export * from './fromPromise';
+export * from './fromEvent';
 export * from './interval';
 export * from './of';
 

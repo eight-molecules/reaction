@@ -9,6 +9,7 @@ import { swap } from '../src/operators/swap';
 
 import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
+import { fromEvent } from '../src';
 
 export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
@@ -53,6 +54,81 @@ test('fromPromise() should return an observable that emits the resolved value th
       next: () => resolve(),
       error: (err: Error) => reject(err)
     });
+  });
+});
+
+test('fromEvent() should return an observable that emits events from the given source.', async () => {
+  return new Promise((resolve, reject) => {
+    const target: EventTarget = new class implements EventTarget {
+      listeners: { [key: string]: EventListener[] } = { };
+      addEventListener(type: string, listener: EventListener) {
+        const key = type.toLowerCase();
+        if (Array.isArray(this.listeners[key])) {
+          this.listeners[key].push(listener);
+        } else {
+          this.listeners[key] = [ listener ];
+        }
+      }
+
+      removeEventListener(type: string, listener: EventListener) {
+        const key = type.toLowerCase();
+        this.listeners[key]?.filter(listenerToCompare => listenerToCompare !== listener);
+      }
+
+      dispatchEvent(event: Event) {
+        const key = event.type.toLowerCase();
+        
+        this.listeners[key]?.forEach(async (listener) => listener(event));
+        return true;
+      }
+    };
+
+    const testEvent = new class TestEvent implements Event {
+      NONE = 0;
+      CAPTURING_PHASE = 1;
+      AT_TARGET = 2;
+      BUBBLING_PHASE = 3;
+      cancelBubble = false;
+      _preventDefault = false;
+      _phase = 0;
+      _currentTarget: EventTarget;
+      _originalTarget: EventTarget;
+      _timestamp = Date.now();
+
+      get bubbles(): boolean { return false; }
+      get cancelable(): boolean { return false; }
+      get composed(): boolean { return false; }
+      get currentTarget(): EventTarget { return this._currentTarget; }
+      get defaultPrevented(): boolean { return this._preventDefault; }
+      get eventPhase(): number { return this._phase; }
+      get returnValue(): any { return undefined; }
+      get target(): EventTarget { return this._originalTarget; }
+      get timeStamp(): number { return this._timestamp; }
+      get type(): string { return 'test'; }
+      get isTrusted(): boolean { return false; }
+
+      get srcElement() { return this.target; }
+
+      composedPath(): EventTarget[] {
+        return [];
+      }
+
+      preventDefault() {
+        this._preventDefault = true;
+      }
+
+      stopImmediatePropagation() { }
+      stopPropagation() { }
+
+      createEvent() { }
+      initEvent() { }
+    };
+
+    fromEvent('test', target).subscribe({
+      next: event => event === testEvent && resolve()
+    });
+
+    target.dispatchEvent(testEvent);
   });
 });
 
