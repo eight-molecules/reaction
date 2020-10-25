@@ -2,9 +2,13 @@
 A reactive programming library
 
 ## Install
-NPM: `npm install --save @gelliott181/reactionjs`
+* NPM
 
-CDN: `<script type="text/javascript" src="https://unpkg.com/@gelliott181/reactionjs@1.0.0"></script>`
+  `npm install --save @gelliott181/reactionjs`
+
+* CDN
+
+  `<script type="text/javascript" src="https://unpkg.com/@gelliott181/reactionjs@1.0.0/dist/reaction.js"></script>`
 
 ## NodeJS
 ```
