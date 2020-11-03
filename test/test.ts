@@ -10,6 +10,7 @@ import { swap } from '../src/operators/swap';
 import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
 import { fromEvent } from '../src';
+import { Subject } from '../src/Subject';
 
 export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
   try {
@@ -43,6 +44,52 @@ test('Observable.toPromise() should return a promise that rejects when an error 
   return new Promise((resolve, reject) => {
     const source = new Observable<void>(({ error }) => error?.(new Error('Purposeful failure.')));
     source.toPromise().then((value: any) => reject(`The promise resolved when it should have rejected! (value: ${value})`)).catch((err: Error) => resolve());
+  });
+});
+
+
+
+test('Subject should emit when next is called.', async () => {
+  return new Promise((resolve, reject) => {
+    const subject = new Subject<void>();
+
+    subject.subscribe({
+      next: () => resolve(),
+      error: () => reject(),
+      complete: () => reject()
+    });
+
+    subject.next();
+  })
+});
+
+test('Subject should re-emit an observable to all observers.', async () => {
+  return new Promise((resolve, reject) => {
+    const source = of('value');
+    const subject = new Subject();
+    const makeMulticastSubscription = () => {
+      return new Promise ((resolve, reject) => {
+        subject.subscribe({
+          next: resolve,
+          error: reject,
+          complete: reject
+        });
+      });
+    };
+  
+    Promise.all([
+      makeMulticastSubscription(),
+      makeMulticastSubscription(),
+      makeMulticastSubscription()
+    ]).then(values => {
+      if (!values) reject('No values!');
+      if (values.length !== 3) reject('Not enough values!');
+      if (values.reduce((result, v) => v !== 'value' && result, false)) reject();
+
+      resolve();
+    });
+
+    source.subscribe(subject);
   });
 });
 
