@@ -47,8 +47,6 @@ test('Observable.toPromise() should return a promise that rejects when an error 
   });
 });
 
-
-
 test('Subject should emit when next is called.', async () => {
   return new Promise((resolve, reject) => {
     const subject = new Subject<void>();
