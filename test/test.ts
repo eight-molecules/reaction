@@ -11,8 +11,9 @@ import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
 import { fromEvent } from '../src';
 import { Subject } from '../src/Subject';
+import { delay } from '../src/operators/delay';
 
-export const test = async (msg: string, should: () => Promise<void> = async () => {}) => {
+export const test = async (msg: string, should: () => Promise<void> | void = async () => {}) => {
   try {
     await should();
     console.log(`✅ ${msg}`);
@@ -301,9 +302,63 @@ test('startWith() should subscribe to an observable that immediately emits the s
 test('swap() should replace the sources with the new observable', async () => {
   return new Promise((resolve, reject) => {
     pipe(of(1), 
-      swap((v: number) => of( ['a', 'b', 'c'][v] )),
+      swap((v: number) => pipe(
+        of(['a', 'b', 'c']), 
+        map((list: string[]) => list[v])
+      )),
     ).subscribe({
-      next: (v: string) => v === 'b' && resolve()
+      next: (v: string) => v === 'c' && resolve()
     });
   })
+});
+
+test('delay() should delay the emission by the correct amount of time.', () => {
+  const testTimeout = 500;
+
+  type Task = { queuedAt: number, timeout: number, run: Function };
+  const tickScheduler = new class TickScheduler {
+    queuedTasks: Task[] = [];
+    currentTick = 0;
+
+    schedule(scheduledFn: Function, timeout: number) {
+      this.queuedTasks.push({ queuedAt: this.currentTick, timeout, run: scheduledFn });
+    }
+
+    tick(ticks: number = 1) {
+      for (let i = 0; i < ticks; i++) {
+          const tick = this.currentTick;
+        const [ now, future ] = this.queuedTasks.reduce<Task[][]>(([ now = [], future = [] ]: Task[][], task: Task): Task[][] => {
+          if (task.queuedAt + task.timeout === tick) {
+            return [ [ ...now, task ], [ ...future ] ];
+          }
+
+          return [ [ ...now ], [ ...future, task ] ];
+        }, []);
+
+        for (const task of now) {
+          task.run();
+        }
+
+        this.currentTick = tick + 1;
+        this.queuedTasks = future;
+      }
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    pipe(of('value'),
+      delay(testTimeout, tickScheduler)
+    ).subscribe({
+      next: (value: string) => {
+        if (tickScheduler.currentTick < 500) reject();
+        if (tickScheduler.currentTick > 500) reject();
+        if (value !== 'value') reject();
+        resolve();
+      }
+    });
+
+    for (let i = 0; i <= 500; i++) {
+      tickScheduler.tick();
+    };
+  });
 });

@@ -4,17 +4,20 @@ import { Subscription } from "./Subscription";
 export class Observable<T> {
   constructor(private onSubscribe: (observer: Observer<T>) => Subscription | void = (observer) => observer.complete?.()) { }
 
-  toPromise(options?: { resolveOnComplete: boolean }): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      const subscription = this.subscribe({
+  async toPromise(): Promise<T> {
+    let subscription: Subscription;
+    
+    const result = await new Promise<T>((resolve, reject) => {
+      subscription = this.subscribe({
         next: (value: T) => {
-          setTimeout(() => subscription.unsubscribe(), 0);
           resolve(value);
         },
-        error: (err: Error) => reject(err),
-        complete: () => resolve()
+        error: (err: Error) => reject(err)
       });
     });
+
+    subscription.unsubscribe();
+    return result;
   }
 
   subscribe(observer: Observer<T>): Subscription {
