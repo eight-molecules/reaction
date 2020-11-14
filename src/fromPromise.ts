@@ -6,7 +6,7 @@ export const fromPromise = <T>(promise: Promise<T>) => new Observable<T>((observ
     try {
       const result = await promise;
       observer.next(result);
-      observer.complete();
+      observer.complete?.();
     } catch (e) {
       observer.error?.(e);
     }

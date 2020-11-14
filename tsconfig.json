@@ -1,10 +1,20 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
-    "sourceMap": true,
-    "noImplicitAny": true,
-    "module": "commonjs",
     "target": "ES2015",
-    "allowJs": true
-  }
+    "module": "commonjs",
+    "lib": ["ES2020", "dom"],
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "noImplicitAny": true,
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ]
 }

@@ -23,5 +23,8 @@
   "files": [
     "dist/"
   ],
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "ts-node": "^9.0.0"
+  }
 }

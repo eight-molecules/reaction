@@ -34,7 +34,7 @@ test('The Observable class should create an observable that immediately complete
   });
 });
 
-test('Observable.toPromise should return a promise that resolves the next emission from the source observable.', async () => {
+test('Observable.toPromise() should return a promise that resolves the next emission from the source observable.', async () => {
   return new Promise((resolve, reject) => {
     const source = new Observable<void>(({ next }) => next());
     source.toPromise().then(() => resolve()).catch((err: Error) => reject(err));
@@ -146,9 +146,13 @@ test('fromEvent() should return an observable that emits events from the given s
       cancelBubble = false;
       _preventDefault = false;
       _phase = 0;
-      _currentTarget: EventTarget;
-      _originalTarget: EventTarget;
       _timestamp = Date.now();
+
+      // @ts-ignore
+      _currentTarget: EventTarget;
+
+      // @ts-ignore
+      _originalTarget: EventTarget;
 
       get bubbles(): boolean { return false; }
       get cancelable(): boolean { return false; }
@@ -203,6 +207,28 @@ test('interval() should return an observable that emits multiple values over a s
       complete: () => resolve()
     });
   });
+});
+
+test('of() should return an observable that emits the value passed.', async () => {
+  return new Promise((resolve, reject) => {
+    let emission: number;
+    let emissionCount: number = 0;
+
+    of(1).subscribe({
+      next: (v: number) => {
+        emission = v;
+        emissionCount += 1;
+      },
+      error: reject,
+      complete: () => {
+        if (emission === 1 && emissionCount === 1) {
+          resolve();
+        }
+
+        reject();
+      }
+    })
+  })
 });
 
 test('pipe() should apply operators to a source', async () => {
@@ -307,7 +333,9 @@ test('swap() should replace the sources with the new observable', async () => {
         map((list: string[]) => list[v])
       )),
     ).subscribe({
-      next: (v: string) => v === 'c' && resolve()
+      next: (v: string) => v === 'c' && resolve(),
+      error: (err: Error) => reject(err.message),
+      complete: () => reject('Complete called.')
     });
   })
 });

@@ -42,7 +42,7 @@ export class Subject<T> extends Observable<T> implements Observer<T> {
 
     while (this.observers.length > 0) {
       const observer = this.observers.pop();
-      observer.complete?.();
+      observer?.complete?.();
     }
   }
 }

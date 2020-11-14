@@ -7,17 +7,17 @@ export class Observable<T> {
   async toPromise(): Promise<T> {
     let subscription: Subscription;
     
-    const result = await new Promise<T>((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       subscription = this.subscribe({
         next: (value: T) => {
           resolve(value);
         },
         error: (err: Error) => reject(err)
       });
+    }).then((v) => {
+      subscription.unsubscribe();
+      return v;
     });
-
-    subscription.unsubscribe();
-    return result;
   }
 
   subscribe(observer: Observer<T>): Subscription {
