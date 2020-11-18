@@ -84,7 +84,7 @@ test('Subject should re-emit an observable to all observers.', async () => {
     ]).then(values => {
       if (!values) reject('No values!');
       if (values.length !== 3) reject('Not enough values!');
-      if (values.reduce((result, v) => v !== 'value' && result, true)) reject();
+      if (values.reduce((result, v) => result && v !== 'value', true)) reject();
 
       resolve();
     });
