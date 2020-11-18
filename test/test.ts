@@ -13,10 +13,20 @@ import { fromEvent } from '../src';
 import { Subject } from '../src/Subject';
 import { delay } from '../src/operators/delay';
 
+let successes = 0;
+let total = 0;
+
 export const test = async (msg: string, should: () => Promise<void> | void = async () => {}) => {
+  total++;
+
   try {
-    await should();
-    console.log(`✅ ${msg}`);
+
+    let timeout: ReturnType<typeof setTimeout>;
+    let timeoutPromise = new Promise((resolve, reject) => timeout = setTimeout(() => reject('Test timed out'), 500));
+
+    await Promise.race([ should(), timeoutPromise ]);
+    successes += 1;
+    console.log(`${successes}/${total} ✅ ${msg}`);
   } catch (e) {
     console.error(`💔 ${msg}`);
     console.error(`\t ${e}`);
@@ -334,7 +344,7 @@ test('swap() should replace the sources with the new observable', async () => {
         map((list: string[]) => list[v])
       )),
     ).subscribe({
-      next: (v: string) => v === 'c' && resolve(),
+      next: (v: string) => v === 'b' && resolve(),
       error: (err: Error) => reject(err.message),
       complete: () => reject('Complete called.')
     });
