@@ -65,13 +65,14 @@ test('Subject should emit when next is called.', async () => {
 test('Subject should re-emit an observable to all observers.', async () => {
   return new Promise((resolve, reject) => {
     const source = of('value');
-    const subject = new Subject();
+    const subject = new Subject<string>();
     const makeMulticastSubscription = () => {
       return new Promise ((resolve, reject) => {
+        let emission: string;
         subject.subscribe({
-          next: resolve,
+          next: (v) => emission = v,
           error: reject,
-          complete: reject
+          complete: () => resolve(emission)
         });
       });
     };
@@ -83,7 +84,7 @@ test('Subject should re-emit an observable to all observers.', async () => {
     ]).then(values => {
       if (!values) reject('No values!');
       if (values.length !== 3) reject('Not enough values!');
-      if (values.reduce((result, v) => v !== 'value' && result, false)) reject();
+      if (values.reduce((result, v) => v !== 'value' && result, true)) reject();
 
       resolve();
     });
