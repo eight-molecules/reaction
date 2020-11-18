@@ -234,7 +234,7 @@ test('of() should return an observable that emits the value passed.', async () =
 
 test('pipe() should apply operators to a source', async () => {
   return new Promise((resolve, reject) => {
-    const toOne: Operator = (observable: Observable<void>) => new Observable<number>((observer) => {
+    const toOne: Operator<number> = (observable: Observable<void>) => new Observable<number>((observer) => {
       observable.subscribe({
         next: () => observer.next(1)
       });
