@@ -1,5 +1,6 @@
 export * from './Observable';
 export * from './Subject';
+export * from './PersistentSubject';
 export * from './Observer';
 export * from './Subscription';
 
