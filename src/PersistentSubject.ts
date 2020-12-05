@@ -2,7 +2,7 @@ import { Subject } from './Subject';
 import { Subscription } from './Subscription';
 import { Observer } from './Observer';
 
-export class Store<T> extends Subject<T> {
+export class PersistentSubject<T> extends Subject<T> {
   constructor(private _value: T) {
     super();
   }

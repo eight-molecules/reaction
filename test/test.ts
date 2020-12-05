@@ -11,7 +11,7 @@ import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
 import { fromEvent } from '../src/fromEvent';
 import { Subject } from '../src/Subject';
-import { Store } from '../src/Store';
+import { PersistentSubject } from '../src/PersistentSubject';
 import { delay } from '../src/operators/delay';
 
 let successes = 0;
@@ -404,17 +404,17 @@ test('delay() should delay the emission by the correct amount of time.', () => {
 });
 
 test('Store should return the stored value on subscribe then mimic the subject.', async () => {
-  const store = new Store<string>('init');
+  const persistentSubject = new PersistentSubject<string>('init');
   let emissions = 0;
 
   const values = [ 'init', 'afterNext', 'final' ];
   const callNext = () => {
     emissions++;
-    store.next(values[emissions]);
+    persistentSubject.next(values[emissions]);
   }
 
   return new Promise<void>((resolve, reject) => {
-    store.subscribe({
+    persistentSubject.subscribe({
       next: (value: string) => {
         if (emissions === 0 && value !== 'init') reject(`value: ${value}, emissions: ${emissions}`); 
         if (emissions === 1 && value !== 'afterNext') reject();
@@ -427,16 +427,15 @@ test('Store should return the stored value on subscribe then mimic the subject.'
 
     callNext();
 
-    store.subscribe({
+    persistentSubject.subscribe({
       next: (value: string) => {
         if (emissions === 0) reject('Store subscription called emitted too early!');
         if (emissions === 1 && value !== 'afterNext') reject();
         if (emissions === 2 && value != 'final') reject();
-      },
-      complete: () => resolve()
+      }
     });
 
     callNext();
-    store.complete();
+    persistentSubject.complete();
   });
 });
