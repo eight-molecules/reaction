@@ -12,12 +12,17 @@ export class Store<T> extends Subject<T> {
   }
 
   next(value: T) {
+    if (this.closed) { return; }
+
     this._value = value;
     super.next(value);
   }
 
   subscribe(observer: Observer<T>): Subscription {
-    observer.next(this._value);
+    if (!this.closed) { 
+      observer.next(this._value); 
+    }
+   
     return super.subscribe(observer);
   }
 }

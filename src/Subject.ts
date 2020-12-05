@@ -22,9 +22,7 @@ export class Subject<T> extends Observable<T> implements Observer<T> {
   }
 
   next(value: T) {
-    if (this.closed) {
-      return;
-    }
+    if (this.closed) { return; }
 
     for (const observer of this.observers) {
       observer.next(value);
