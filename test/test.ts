@@ -407,31 +407,36 @@ test('Store should return the stored value on subscribe then mimic the subject.'
   const store = new Store<string>('init');
   let emissions = 0;
 
-  return new Promise<void>((resolve, reject) => {
-    const values = [ 'init', 'afterNext', 'final' ];
-    const callNext = () => store.next(values[emissions]);
+  const values = [ 'init', 'afterNext', 'final' ];
+  const callNext = () => {
+    emissions++;
+    store.next(values[emissions]);
+  }
 
+  return new Promise<void>((resolve, reject) => {
     store.subscribe({
       next: (value: string) => {
         if (emissions === 0 && value !== 'init') reject(`value: ${value}, emissions: ${emissions}`); 
         if (emissions === 1 && value !== 'afterNext') reject();
         if (emissions === 2 && value != 'final') reject();
         if (emissions > 2) reject();
-        emissions++;
-        callNext();
       },
-      error: (err: Error) => reject(),
+      error: (err: Error) => reject(err),
       complete: () => resolve()
     });
-  
+
+    callNext();
+
     store.subscribe({
       next: (value: string) => {
-        if (emissions === 0) reject();
+        if (emissions === 0) reject('Store subscription called emitted too early!');
         if (emissions === 1 && value !== 'afterNext') reject();
         if (emissions === 2 && value != 'final') reject();
-      }
+      },
+      complete: () => resolve()
     });
-  
+
+    callNext();
     store.complete();
   });
 });
