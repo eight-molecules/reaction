@@ -9,8 +9,9 @@ import { swap } from '../src/operators/swap';
 
 import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
-import { fromEvent } from '../src';
+import { fromEvent } from '../src/fromEvent';
 import { Subject } from '../src/Subject';
+import { Store } from '../src/Store';
 import { delay } from '../src/operators/delay';
 
 let successes = 0;
@@ -195,7 +196,7 @@ test('fromEvent() should return an observable that emits events from the given s
     };
 
     fromEvent('test', target).subscribe({
-      next: event => event === testEvent && resolve()
+      next: (event: Event) => event === testEvent && resolve()
     });
 
     target.dispatchEvent(testEvent);
@@ -399,5 +400,38 @@ test('delay() should delay the emission by the correct amount of time.', () => {
     for (let i = 0; i <= 500; i++) {
       tickScheduler.tick();
     };
+  });
+});
+
+test('Store should return the stored value on subscribe then mimic the subject.', async () => {
+  const store = new Store<string>('init');
+  let emissions = 0;
+
+  return new Promise<void>((resolve, reject) => {
+    const values = [ 'init', 'afterNext', 'final' ];
+    const callNext = () => store.next(values[emissions]);
+
+    store.subscribe({
+      next: (value: string) => {
+        if (emissions === 0 && value !== 'init') reject(`value: ${value}, emissions: ${emissions}`); 
+        if (emissions === 1 && value !== 'afterNext') reject();
+        if (emissions === 2 && value != 'final') reject();
+        if (emissions > 2) reject();
+        emissions++;
+        callNext();
+      },
+      error: (err: Error) => reject(),
+      complete: () => resolve()
+    });
+  
+    store.subscribe({
+      next: (value: string) => {
+        if (emissions === 0) reject();
+        if (emissions === 1 && value !== 'afterNext') reject();
+        if (emissions === 2 && value != 'final') reject();
+      }
+    });
+  
+    store.complete();
   });
 });

@@ -6,7 +6,7 @@ export class Subject<T> extends Observable<T> implements Observer<T> {
   closed = false;
 
   constructor() {
-    super((observer) => {
+    super((observer: Observer<T>) => {
       this.observers.push(observer);
 
       return { 
