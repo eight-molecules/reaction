@@ -30,6 +30,8 @@ export class Subject<T> extends Observable<T> implements Observer<T> {
   }
 
   error(error: Error) {
+    if (this.closed) { return; }
+    
     for (const observer of this.observers) {
       observer.error?.(error);
     }

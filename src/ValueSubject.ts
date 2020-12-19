@@ -2,15 +2,13 @@ import { Subject } from './Subject';
 import { Subscription } from './Subscription';
 import { Observer } from './Observer';
 
-export class PersistentSubject<T> extends Subject<T> {
-  constructor(private _value: T) {
-    super();
+export class ValueSubject<T> extends Subject<T> {
+  get value(): T {
+    return this._value!;
   }
 
-  get value() {
-    return this._value;
-  }
-
+  constructor(private _value?: T) { super(); }
+  
   next(value: T) {
     if (this.closed) { return; }
 
@@ -20,7 +18,7 @@ export class PersistentSubject<T> extends Subject<T> {
 
   subscribe(observer: Observer<T>): Subscription {
     if (!this.closed) { 
-      observer.next(this._value); 
+      observer.next(this.value); 
     }
    
     return super.subscribe(observer);
