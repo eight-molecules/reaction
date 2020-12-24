@@ -1,9 +1,9 @@
 import { Operator, OperatorFactory } from "./Operator";
-import { Observable } from "../Observable";
+import { create, Observable } from "../Observable";
 import { Observer } from "../Observer";
 
-export const map: OperatorFactory = <T, U>(mapFn: <U, T>(value: U) => T): Operator<T> => (observable: Observable<U>) => new Observable<T>((observer: Observer<T>) => {
+export const map: OperatorFactory = <T, U>(mapFn: <T, U>(value: T) => U): Operator<T> => (observable: Observable<U>) => create<T>(({ next }: Observer<T>) => {
   observable.subscribe({
-    next: (value) => observer.next(mapFn(value))
+    next: (value: U) => next(mapFn(value))
   });
 });

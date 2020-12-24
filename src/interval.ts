@@ -1,15 +1,13 @@
-import { Observable } from "./Observable";
+import { create, Observable } from "./Observable";
 import { Observer } from "./Observer";
 
-export const interval = (delay: number= 1000) => {
-  return new Observable<void>((observer: Observer<void>) => {
-    const interval = setInterval(() => observer.next(), delay);
+export const interval = (delay: number= 1000) => create<void>(({ next, complete }: Observer<void>) => {
+  const interval = setInterval(() => next(), delay);
 
-    return { 
-      unsubscribe: () => {
-        clearInterval(interval);
-        observer.complete?.();
-      }
-    };
-  });
-}
+  return { 
+    unsubscribe() {
+      clearInterval(interval);
+      complete();
+    }
+  };
+});

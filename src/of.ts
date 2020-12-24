@@ -1,7 +1,7 @@
-import { Observable } from "./Observable";
+import { create } from "./Observable";
 import { Observer } from "./Observer";
 
-export const of = <T>(value: T) => new Observable<T>((observer: Observer<T>) => {
-  observer.next(value);
-  observer.complete?.();
+export const of = <T>(value: T) => create<T>(({ next, complete }: Observer<T>) => {
+  next(value);
+  complete();
 });

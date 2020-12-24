@@ -1,5 +1,6 @@
-import { Observable } from '../src/Observable';
+import { Observable, create } from '../src/Observable';
 import { fromPromise } from '../src/fromPromise';
+import { toPromise } from '../src/toPromise';
 import { interval } from '../src/interval';
 import { pipe } from '../src/pipe';
 import { map } from '../src/operators/map';
@@ -10,8 +11,7 @@ import { swap } from '../src/operators/swap';
 import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
 import { fromEvent } from '../src/fromEvent';
-import { Subject } from '../src/Subject';
-import { ValueSubject } from '../src/ValueSubject';
+import { createSubject } from '../src/Subject';
 import { delay } from '../src/operators/delay';
 
 let successes = 0;
@@ -36,7 +36,7 @@ export const test = async (msg: string, should: () => Promise<void> | void = asy
 
 test('The Observable class should create an observable that immediately completes.', () => {
   return new Promise<void>((resolve, reject) => {
-    const observable = new Observable<void>();
+    const observable = create<void>();
     observable.subscribe({
       next: () => reject(),
       error: (err: Error) => reject(err),
@@ -47,21 +47,21 @@ test('The Observable class should create an observable that immediately complete
 
 test('Observable.toPromise() should return a promise that resolves the next emission from the source observable.', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable<void>(({ next }) => next());
-    source.toPromise().then(() => resolve()).catch((err: Error) => reject(err));
+    const source = create<void>(({ next }) => next());
+    toPromise(source).then(() => resolve()).catch((err: Error) => reject(err));
   });
 });
 
 test('Observable.toPromise() should return a promise that rejects when an error occurs.', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable<void>(({ error }) => error?.(new Error('Purposeful failure.')));
-    source.toPromise().then((value: any) => reject(`The promise resolved when it should have rejected! (value: ${value})`)).catch((err: Error) => resolve());
+    const source = create<void>(({ error }) => error?.(new Error('Purposeful failure.')));
+    toPromise(source).then((value: any) => reject(`The promise resolved when it should have rejected! (value: ${value})`)).catch((err: Error) => resolve());
   });
 });
 
 test('Subject should emit when next is called.', async () => {
   return new Promise((resolve, reject) => {
-    const subject = new Subject<void>();
+    const subject = createSubject<void>();
 
     subject.subscribe({
       next: () => resolve(),
@@ -76,13 +76,13 @@ test('Subject should emit when next is called.', async () => {
 test('Subject should re-emit an observable to all observers.', async () => {
   return new Promise((resolve, reject) => {
     const source = of('value');
-    const subject = new Subject<string>();
+    const subject = createSubject<string>();
     const makeMulticastSubscription = () => {
       return new Promise ((resolve, reject) => {
         let emission: string;
         subject.subscribe({
           next: (v) => emission = v,
-          error: reject,
+          error: (err: Error) => reject(err),
           complete: () => resolve(emission)
         });
       });
@@ -245,13 +245,13 @@ test('of() should return an observable that emits the value passed.', async () =
 
 test('pipe() should apply operators to a source', async () => {
   return new Promise((resolve, reject) => {
-    const toOne: Operator<number> = (observable: Observable<void>) => new Observable<number>((observer) => {
+    const toOne: Operator<number> = (observable: Observable<void>) => create<number>((observer) => {
       observable.subscribe({
         next: () => observer.next(1)
       });
     });
   
-    const source = new Observable<void>(({ next }) => next());
+    const source = create<void>(({ next }) => next());
     pipe(source, 
       toOne
     ).subscribe({
@@ -268,7 +268,7 @@ test('pipe() should apply operators to a source', async () => {
 
 test('map() should apply a change to the source', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable<void>(({ next }) => next());
+    const source = create<void>(({ next }) => next());
     pipe(source, 
       map(() => 1),
       map((x: number) => x * 2),
@@ -287,7 +287,7 @@ test('map() should apply a change to the source', async () => {
 
 test('tap() should run a function and return the same value.', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable<void>(({ next, complete }) => { 
+    const source = create<void>(({ next, complete }) => { 
       for(let i = 0; i < 3; i++) { 
         next() ;
       }
@@ -314,12 +314,12 @@ test('tap() should run a function and return the same value.', async () => {
 
 test('startWith() should subscribe to an observable that immediately emits the starting value followed by the original observable emissions.', async () => {
   return new Promise((resolve, reject) => {
-    const source = new Observable<number>((observer) => {
+    const source = create<number>(({ next, complete }) => {
       for (const value of [1, 2, 3]) {
-        observer.next(value);
+        next(value);
       }
 
-      observer.complete?.();
+      complete();
     });
 
     let emissions = 0;
@@ -400,42 +400,5 @@ test('delay() should delay the emission by the correct amount of time.', () => {
     for (let i = 0; i <= 500; i++) {
       tickScheduler.tick();
     };
-  });
-});
-
-test('ValueSubject should return the stored value on subscribe then mimic the subject.', async () => {
-  const persistentSubject = new ValueSubject<string>('init');
-  let emissions = 0;
-
-  const values = [ 'init', 'afterNext', 'final' ];
-  const callNext = () => {
-    emissions++;
-    persistentSubject.next(values[emissions]);
-  }
-
-  return new Promise<void>((resolve, reject) => {
-    persistentSubject.subscribe({
-      next: (value: string) => {
-        if (emissions === 0 && value !== 'init') reject(`value: ${value}, emissions: ${emissions}`); 
-        if (emissions === 1 && value !== 'afterNext') reject();
-        if (emissions === 2 && value != 'final') reject();
-        if (emissions > 2) reject();
-      },
-      error: (err: Error) => reject(err),
-      complete: () => resolve()
-    });
-
-    callNext();
-
-    persistentSubject.subscribe({
-      next: (value: string) => {
-        if (emissions === 0) reject('Store subscription called emitted too early!');
-        if (emissions === 1 && value !== 'afterNext') reject();
-        if (emissions === 2 && value != 'final') reject();
-      }
-    });
-
-    callNext();
-    persistentSubject.complete();
   });
 });

@@ -1,48 +1,55 @@
-import { Observable } from "./Observable";
-import { Observer } from "./Observer";
+import { create, Observable } from "./Observable";
+import { createObserver, Observer } from "./Observer";
 
-export class Subject<T> extends Observable<T> implements Observer<T> {
-  observers: Observer<T>[] = [];
-  closed = false;
+export type Subject<T> = (Observable<T> & Observer<T>);
 
-  constructor() {
-    super((observer: Observer<T>) => {
-      this.observers.push(observer);
+export const createSubject = <T>(): Subject<T> => {
+  const observers: Observer<T>[] = [];
+  let closed = false;
 
-      return { 
-        unsubscribe: () => {
-          const index = this.observers.indexOf(observer);
+  const onSubscribe = (unsafeObserver: Partial<Observer<T>>) => {
+    const observer = createObserver(unsafeObserver);
+    observers.push(observer);
 
-          if (index < 0) {
-            this.observers.splice(index);
-          }
-        } 
-      };
-    });
-  }
+    return { 
+      unsubscribe: () => {
+        const index = observers.indexOf(observer);
 
-  next(value: T) {
-    if (this.closed) { return; }
+        if (index < 0) {
+          observers.splice(index);
+        }
+      } 
+    }
+  };
+  
+  const next = (value: T): void => {
+    if (closed) { return; }
 
-    for (const observer of this.observers) {
+    for (const observer of observers) {
       observer.next(value);
     }
-  }
+  };
 
-  error(error: Error) {
-    if (this.closed) { return; }
+  const error = (error: Error): void => {
+    if (closed) { return; }
     
-    for (const observer of this.observers) {
-      observer.error?.(error);
+    for (const observer of observers) {
+      observer.error(error);
     }
-  }
+  };
 
-  complete() {
-    this.closed = true;
+  const complete = (): void => {
+    if (closed) { return; }
+    closed = true;
 
-    while (this.observers.length > 0) {
-      const observer = this.observers.pop();
-      observer?.complete?.();
+    while (observers.length > 0) {
+      const observer = observers.pop()!;
+      observer.complete();
     }
-  }
-}
+  };
+
+  return {
+    ...create(onSubscribe),
+    ...createObserver({ next, error, complete })
+  };
+};

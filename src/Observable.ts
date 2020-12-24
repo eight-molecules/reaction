@@ -1,27 +1,13 @@
-import { Observer } from "./Observer";
+import { createObserver, Observer } from "./Observer";
 import { Subscription } from "./Subscription";
 
-export class Observable<T> {
-  constructor(private onSubscribe: (observer: Observer<T>) => Subscription | void = (observer) => observer.complete?.()) { }
+export interface Observable<T> {
+  subscribe(observer: Observer<T> | Partial<Observer<T>> | undefined): Subscription
+};
 
-  async toPromise(): Promise<T> {
-    let subscription: Subscription;
-    
-    return new Promise<T>((resolve, reject) => {
-      subscription = this.subscribe({
-        next: (value: T) => {
-          resolve(value);
-        },
-        error: (err: Error) => reject(err)
-      });
-    }).then((v) => {
-      subscription.unsubscribe();
-      return v;
-    });
-  }
 
-  subscribe(observer: Observer<T>): Subscription {
-    const subscription = this.onSubscribe(observer);
-    return subscription || { unsubscribe(): void { } };
+export const create = <T>(onSubscribe: ((observer: Observer<T>) => Subscription | void) = ({ complete }) => { complete() }): Observable<T> => ({
+  subscribe(unsafeObserver: Partial<Observer<T>>): Subscription {
+    return onSubscribe(createObserver(unsafeObserver)) || { unsubscribe(): void { } };
   }
-}
+});
