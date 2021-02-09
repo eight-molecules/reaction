@@ -5,7 +5,9 @@ const timeoutScheduler = { schedule: (scheduledFn: Function, timeout: number) =>
 export const delay = (timeout: number, scheduler: { schedule: (...params: any[]) => any } = timeoutScheduler) => <T>(source: Observable<T>) => {
   return create<T>(({ next, error, complete }: Observer<T>) => {
     source.subscribe({
-      next: (v: T) => scheduler.schedule(() => next(v), timeout)
+      next: (v: T) => scheduler.schedule(() => next(v), timeout),
+      error,
+      complete
     });
   });
 };
