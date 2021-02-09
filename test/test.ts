@@ -9,6 +9,7 @@ import { startWith } from '../src/operators/startWith';
 import { swap } from '../src/operators/swap';
 
 import { error } from '../src/error';
+import { split } from '../src/split';
 import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
 import { fromEvent } from '../src/fromEvent';
@@ -355,15 +356,25 @@ test('startWith() should subscribe to an observable that immediately emits the s
 
 test('swap() should replace the sources with the new observable', async () => {
   return new Promise((resolve, reject) => {
-    pipe(of(1), 
+    let emissions = 0;
+    pipe(split([1, 2, 0]), 
       swap((v: number) => pipe(
         of(['a', 'b', 'c']), 
-        map((list: string[]) => list[v])
+        map((list: string[]) => ({ number: v, value: list[v] }))
       )),
+      tap(console.log)
     ).subscribe({
-      next: (v: string) => v === 'b' && resolve(),
+      next: ({ number, value }) => {
+        if (emissions === 0 && number !== 1 && value !== 'b') reject({number, value});
+        if (emissions === 1 && number !== 2 && value !== 'c') reject({number, value});
+        if (emissions === 2 && number !== 0 && value !== 'b') reject({number, value});
+        emissions++;
+      },
       error: (err: Error) => reject(err.message),
-      complete: () => reject('Complete called.')
+      complete: () => {
+        if (emissions < 3) reject(emissions);
+        resolve();
+      }
     });
   })
 });
