@@ -362,7 +362,6 @@ test('swap() should replace the sources with the new observable', async () => {
         of(['a', 'b', 'c']), 
         map((list: string[]) => ({ number: v, value: list[v] }))
       )),
-      tap(console.log)
     ).subscribe({
       next: ({ number, value }) => {
         if (emissions === 0 && number !== 1 && value !== 'b') reject({number, value});
