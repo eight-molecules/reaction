@@ -8,6 +8,7 @@ import { tap } from '../src/operators/tap';
 import { startWith } from '../src/operators/startWith';
 import { swap } from '../src/operators/swap';
 
+import { error } from '../src/error';
 import { of } from '../src/of';
 import { Operator } from '../src/operators/Operator';
 import { fromEvent } from '../src/fromEvent';
@@ -281,6 +282,21 @@ test('map() should apply a change to the source', async () => {
 
         resolve();
       }
+    });
+  });
+});
+
+test('map() should pass errors on from the source.', async () => {
+  return new Promise((resolve, reject) => {
+    const source = error('test');
+    pipe(source, 
+      map(() => 1),
+      map((x: number) => x * 2),
+      map((result: number) => result.toString())
+    ).subscribe({
+      next: () => reject('The source should not emit.'),
+      error: () => resolve(),
+      complete: () => reject('The source should not emit.'),
     });
   });
 });

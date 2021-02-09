@@ -8,6 +8,7 @@ export * from './fromPromise';
 export * from './fromEvent';
 export * from './interval';
 export * from './of';
+export * from './error';
 
 export * from './pipe';
 
