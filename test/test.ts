@@ -36,6 +36,36 @@ export const test = async (msg: string, should: () => Promise<void> | void = asy
   }
 }
 
+type Task = { queuedAt: number, timeout: number, run: Function };
+class TickScheduler {
+  queuedTasks: Task[] = [];
+  currentTick = 0;
+
+  schedule(scheduledFn: Function, timeout: number) {
+    this.queuedTasks.push({ queuedAt: this.currentTick, timeout, run: scheduledFn });
+  }
+
+  tick(ticks: number = 1) {
+    for (let i = 0; i < ticks; i++) {
+        const tick = this.currentTick;
+      const [ now, future ] = this.queuedTasks.reduce<Task[][]>(([ now = [], future = [] ]: Task[][], task: Task): Task[][] => {
+        if (task.queuedAt + task.timeout === tick) {
+          return [ [ ...now, task ], [ ...future ] ];
+        }
+
+        return [ [ ...now ], [ ...future, task ] ];
+      }, []);
+
+      for (const task of now) {
+        task.run();
+      }
+
+      this.currentTick = tick + 1;
+      this.queuedTasks = future;
+    }
+  }
+}
+
 test('The Observable class should create an observable that immediately completes.', () => {
   return new Promise<void>((resolve, reject) => {
     const observable = create<void>();
@@ -371,60 +401,53 @@ test('swap() should replace the sources with the new observable', async () => {
       },
       error: (err: Error) => reject(err.message),
       complete: () => {
-        if (emissions < 3) reject(emissions);
+        if (emissions !== 3) reject('Wrong number of emissions at completion!');
         resolve();
       }
     });
   })
 });
 
-test('delay() should delay the emission by the correct amount of time.', () => {
-  const testTimeout = 500;
-
-  type Task = { queuedAt: number, timeout: number, run: Function };
-  const tickScheduler = new class TickScheduler {
-    queuedTasks: Task[] = [];
-    currentTick = 0;
-
-    schedule(scheduledFn: Function, timeout: number) {
-      this.queuedTasks.push({ queuedAt: this.currentTick, timeout, run: scheduledFn });
-    }
-
-    tick(ticks: number = 1) {
-      for (let i = 0; i < ticks; i++) {
-          const tick = this.currentTick;
-        const [ now, future ] = this.queuedTasks.reduce<Task[][]>(([ now = [], future = [] ]: Task[][], task: Task): Task[][] => {
-          if (task.queuedAt + task.timeout === tick) {
-            return [ [ ...now, task ], [ ...future ] ];
-          }
-
-          return [ [ ...now ], [ ...future, task ] ];
-        }, []);
-
-        for (const task of now) {
-          task.run();
-        }
-
-        this.currentTick = tick + 1;
-        this.queuedTasks = future;
+test('swap() should cancel inner subs on complete.', async () => {
+  return new Promise((resolve, reject) => {
+    const scheduler = new TickScheduler();
+    let emissions = 0;
+    pipe(split([1, 2, 0]), 
+      swap((v: number) => pipe(
+        of(['a', 'b', 'c']),
+        delay(1, scheduler),
+        map((list: string[]) => ({ number: v, value: list[v] })),
+      )),
+    ).subscribe({
+      next: (value: any) => reject(value),
+      error: (err: Error) => reject(err.message),
+      complete: () => {
+        if (emissions !== 0) reject(emissions);
+        resolve();
       }
-    }
-  }
+    });
+  });
+});
+
+test('delay() should delay the emission by the correct amount of time.', () => {
+  const scheduler = new TickScheduler();
+  const testTimeout = 500;
 
   return new Promise((resolve, reject) => {
     pipe(of('value'),
-      delay(testTimeout, tickScheduler)
+      delay(testTimeout, scheduler)
     ).subscribe({
       next: (value: string) => {
-        if (tickScheduler.currentTick < 500) reject();
-        if (tickScheduler.currentTick > 500) reject();
+        if (scheduler.currentTick < 500) reject();
+        if (scheduler.currentTick > 500) reject();
         if (value !== 'value') reject();
         resolve();
       }
     });
 
     for (let i = 0; i <= 500; i++) {
-      tickScheduler.tick();
+      scheduler.tick();
     };
   });
 });
+

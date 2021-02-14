@@ -7,7 +7,7 @@ export const delay = (timeout: number, scheduler: { schedule: (...params: any[])
     source.subscribe({
       next: (v: T) => scheduler.schedule(() => next(v), timeout),
       error,
-      complete
+      complete: () => scheduler.schedule(() => complete(), timeout)
     });
   });
 };
